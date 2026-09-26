@@ -1,0 +1,6 @@
+services:
+  plugin-market:
+    build: .
+    ports:
+      - "3900:3900"
+    restart: unless-stopped

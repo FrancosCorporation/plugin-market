@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plugin Market</title>
+  <style>
+    :root { --fundo:#0f1318; --carta:#1a2027; --borda:#2c3540; --texto:#e8edf2; --suave:#8b98a5; --verde:#2ea043; --azul:#388bfd; --amarelo:#d29922; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:"Segoe UI",system-ui,Arial,sans-serif; background:var(--fundo); color:var(--texto); padding:20px; }
+    h1 { font-size:20px; } .sub { color:var(--suave); font-size:13px; margin-bottom:16px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+    .card { background:var(--carta); border:1px solid var(--borda); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px; }
+    .card h2 { font-size:15px; } .card .desc { color:var(--suave); font-size:13px; }
+    .card .meta { font-size:11px; color:var(--suave); }
+    .badge { font-size:11px; padding:2px 10px; border-radius:999px; align-self:flex-start; font-weight:700; }
+    .leitura { background:#1f3a5f; color:#9ecbff; } .escrita { background:#5b2d6f; color:#e0b3ff; }
+    button { background:var(--verde); border:none; color:#fff; font-weight:700; border-radius:8px; padding:10px 16px; font-size:13px; cursor:pointer; }
+    button.instalado { background:var(--borda); }
+    .estrelas { color:var(--amarelo); font-size:14px; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Plugin Market</h1>
+  <p class="sub">ecossistema de plugins: SDK + semver + execução SANDBOXED (imutável, timeout, permissões)</p>
+  <div class="grid" id="lista"></div>
+  <script>
+    async function atualizar() {
+      const plugins = await fetch('/api/plugins').then((r) => r.json());
+      document.getElementById('lista').innerHTML = plugins.map((p) => `
+        <div class="card">
+          <span class="badge ${p.permissao}">${p.permissao}</span>
+          <h2>${p.nome} <small style="color:var(--suave)">v${p.versao}</small></h2>
+          <span class="desc">${p.descricao || '—'}</span>
+          <span class="meta">ganchos: ${p.ganchos.join(', ')} · hash ${p.hash.slice(0, 8)}</span>
+          <span class="estrelas">${'★'.repeat(Math.round(p.mediaEstrelas)) || '☆'} ${(p.mediaEstrelas || 0).toFixed(1)}</span>
+          <button class="${p.instalado ? 'instalado' : ''}" ${p.instalado ? 'disabled' : ''} onclick="instalar('${p.nome}')">
+            ${p.instalado ? '✔ instalado' : 'Instalar'}
+          </button>
+        </div>`).join('');
+    }
+    async function instalar(nome) {
+      await fetch(`/api/plugins/${nome}/instalar`, { method: 'POST' });
+      atualizar();
+    }
+    atualizar();
+  </script>
+</body>
+</html>

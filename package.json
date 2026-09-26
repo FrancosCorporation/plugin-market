@@ -1,0 +1,19 @@
+{
+ "name": "plugin-market",
+ "version": "0.1.0",
+ "description": "Marketplace de plugins: SDK JS + semver + manifest + execucao SANDBOXED (imutavel, timeout, permissoes)",
+ "main": "server.js",
+ "type": "module",
+ "license": "MIT",
+ "author": "Rodolfo Franco (FrancosCorporation)",
+ "scripts": {
+  "start": "node server.js",
+  "test": "NO_LISTEN=1 node --test test/sandbox-test.mjs && node --test test/market-test.mjs"
+ },
+ "dependencies": {
+  "express": "^4.21.0"
+ },
+ "engines": {
+  "node": ">=18"
+ }
+}

@@ -8,7 +8,7 @@
  "author": "Rodolfo Franco (FrancosCorporation)",
  "scripts": {
   "start": "node server.js",
-  "test": "NO_LISTEN=1 node --test test/sandbox-test.mjs && node --test test/market-test.mjs"
+  "test": "NO_LISTEN=1 node --test test/sandbox-test.mjs && node --test test/market-test.mjs && NODE_ENV=test node --test test/m2-test.mjs"
  },
  "dependencies": {
   "express": "^4.21.0"

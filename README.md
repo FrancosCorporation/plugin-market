@@ -1,6 +1,6 @@
 # Plugin Market — Extensible Plugin Marketplace
 
-![Status](https://img.shields.io/badge/M1-funcionando%20(13%2F13%20testes)-brightgreen)
+![Status](https://img.shields.io/badge/M1%20%2B%20M2-funcionando%20(17%2F17%20testes)-brightgreen)
 ![CI](https://img.shields.io/badge/CI-test%20%2B%20license%20check-blue)
 ![Node](https://img.shields.io/badge/Node-%3E%3D18-green?logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -19,7 +19,8 @@ marketplace API, install/uninstall panel with reviews, and SANDBOXED plugin exec
 - [x] **M1b** — Marketplace API: publicar (idempotente por hash), instalar, estrelas com média, execução SANDBOXED
 - [x] **SANDBOX provado (8/8):** evento congelado (mutação não vaza), timeout mata plugin travado, permissão leitura bloqueia escrita, erro capturado
 - [x] Painel web com cards, permissões e estrelas
-- [ ] **M2** — execução de plugins PERSISTIDOS (SDK registra handlers), telemetria de uso, sqlite
+- [x] **M2** — **Persistência sqlite REAL** (plugins/instalações/estrelas sobrevivem a restarts — provado),
+      **telemetria de execução** com p50/p95 e taxa de sucesso — 17/17 testes
 
 ## Quick start
 

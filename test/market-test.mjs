@@ -5,10 +5,6 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
-const WebSocket = require('ws'); // (não usado aqui, mas mantém o harness igual)
 
 const PORTA = 3891;
 const BASE = `http://localhost:${PORTA}`;

@@ -1,6 +1,17 @@
 services:
   plugin-market:
     build: .
+    environment:
+      PORT: "3900"
+      DATABASE_PATH: /data/plugin-market.db
+      JWT_SECRET: ${JWT_SECRET:?configure JWT_SECRET in .env}
+      PLUGIN_ADMIN_EMAIL: ${PLUGIN_ADMIN_EMAIL:?configure PLUGIN_ADMIN_EMAIL in .env}
+      PLUGIN_ADMIN_PASSWORD: ${PLUGIN_ADMIN_PASSWORD:?configure PLUGIN_ADMIN_PASSWORD in .env}
     ports:
-      - "3900:3900"
+      - "127.0.0.1:3900:3900"
+    volumes:
+      - plugin-market-data:/data
     restart: unless-stopped
+
+volumes:
+  plugin-market-data:

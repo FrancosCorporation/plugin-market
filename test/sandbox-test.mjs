@@ -52,10 +52,10 @@ test('SANDBOX: permissão leitura bloqueia evento de escrita', async () => {
   assert.ok(r.erro.includes('leitura'));
 });
 
-test('SANDBOX: plugin sem manipular rejeitado', async () => {
+test('SANDBOX: plugin sem handler confiável rejeitado', async () => {
   const r = await executarSandbox({ manifest: MANIFEST_EXEMPLO }, 'card-criado', {});
   assert.equal(r.ok, false);
-  assert.ok(r.erro.includes('manipular'));
+  assert.ok(r.erro.includes('handler'));
 });
 
 test('SANDBOX: erro dentro do handler capturado (não derruba o host)', async () => {
@@ -68,9 +68,9 @@ test('SANDBOX: erro dentro do handler capturado (não derruba o host)', async ()
   assert.ok(r.erro.includes('bug do plugin'));
 });
 
-test('hash do manifest: determinístico e curto', () => {
+test('hash do manifest: determinístico e completo', () => {
   const h1 = hashPlugin(MANIFEST_EXEMPLO);
   const h2 = hashPlugin(MANIFEST_EXEMPLO);
   assert.equal(h1, h2);
-  assert.equal(h1.length, 16);
+  assert.equal(h1.length, 64);
 });

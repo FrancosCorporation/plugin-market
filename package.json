@@ -1,19 +1,20 @@
 {
  "name": "plugin-market",
  "version": "0.1.0",
- "description": "Marketplace de plugins: SDK JS + semver + manifest + execucao SANDBOXED (imutavel, timeout, permissoes)",
+ "description": "Marketplace de plugins com SQLite, autenticação, moderação e handlers confiáveis do host",
  "main": "server.js",
  "type": "module",
  "license": "MIT",
  "author": "Rodolfo Franco (FrancosCorporation)",
  "scripts": {
   "start": "node server.js",
+  "check": "node --check server.js && node --check src/auth.js && node --check src/loja.js && node --check src/sandbox.js && node --check src/host-handlers.js && node --check public/app.js",
   "test": "NO_LISTEN=1 node --test test/sandbox-test.mjs && node --test test/market-test.mjs && NODE_ENV=test node --test test/m2-test.mjs"
  },
  "dependencies": {
   "express": "^4.21.0"
  },
  "engines": {
-  "node": ">=18"
+  "node": ">=22.5"
  }
 }

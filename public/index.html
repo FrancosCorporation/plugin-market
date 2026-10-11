@@ -1,49 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131a">
   <title>Plugin Market</title>
-  <style>
-    :root { --fundo:#0f1318; --carta:#1a2027; --borda:#2c3540; --texto:#e8edf2; --suave:#8b98a5; --verde:#2ea043; --azul:#388bfd; --amarelo:#d29922; }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:"Segoe UI",system-ui,Arial,sans-serif; background:var(--fundo); color:var(--texto); padding:20px; }
-    h1 { font-size:20px; } .sub { color:var(--suave); font-size:13px; margin-bottom:16px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
-    .card { background:var(--carta); border:1px solid var(--borda); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px; }
-    .card h2 { font-size:15px; } .card .desc { color:var(--suave); font-size:13px; }
-    .card .meta { font-size:11px; color:var(--suave); }
-    .badge { font-size:11px; padding:2px 10px; border-radius:999px; align-self:flex-start; font-weight:700; }
-    .leitura { background:#1f3a5f; color:#9ecbff; } .escrita { background:#5b2d6f; color:#e0b3ff; }
-    button { background:var(--verde); border:none; color:#fff; font-weight:700; border-radius:8px; padding:10px 16px; font-size:13px; cursor:pointer; }
-    button.instalado { background:var(--borda); }
-    .estrelas { color:var(--amarelo); font-size:14px; }
-  </style>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
 </head>
 <body>
-  <h1>🧩 Plugin Market</h1>
-  <p class="sub">ecossistema de plugins: SDK + semver + execução SANDBOXED (imutável, timeout, permissões)</p>
-  <div class="grid" id="lista"></div>
-  <script>
-    async function atualizar() {
-      const plugins = await fetch('/api/plugins').then((r) => r.json());
-      document.getElementById('lista').innerHTML = plugins.map((p) => `
-        <div class="card">
-          <span class="badge ${p.permissao}">${p.permissao}</span>
-          <h2>${p.nome} <small style="color:var(--suave)">v${p.versao}</small></h2>
-          <span class="desc">${p.descricao || '—'}</span>
-          <span class="meta">ganchos: ${p.ganchos.join(', ')} · hash ${p.hash.slice(0, 8)}</span>
-          <span class="estrelas">${'★'.repeat(Math.round(p.mediaEstrelas)) || '☆'} ${(p.mediaEstrelas || 0).toFixed(1)}</span>
-          <button class="${p.instalado ? 'instalado' : ''}" ${p.instalado ? 'disabled' : ''} onclick="instalar('${p.nome}')">
-            ${p.instalado ? '✔ instalado' : 'Instalar'}
-          </button>
-        </div>`).join('');
-    }
-    async function instalar(nome) {
-      await fetch(`/api/plugins/${nome}/instalar`, { method: 'POST' });
-      atualizar();
-    }
-    atualizar();
-  </script>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Plugin Market, início"><span class="brand-mark">P</span><span>Plugin Market</span></a>
+    <div id="session" class="session" aria-live="polite"></div>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">ECOSSISTEMA DE EXTENSÕES</p>
+      <h1>Plugins para o seu espaço de trabalho</h1>
+      <p class="lede">Descubra extensões revisadas, instale as que fazem sentido e acompanhe suas avaliações.</p>
+    </section>
+
+    <section id="auth-panel" class="panel auth-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">SUA CONTA</p><h2>Entre para continuar</h2></div>
+        <p class="muted">Publicação e instalação exigem uma conta.</p>
+      </div>
+      <div class="auth-grid">
+        <form id="login-form" class="form-stack">
+          <h3>Entrar</h3>
+          <label>E-mail<input name="email" type="email" autocomplete="username" required maxlength="254"></label>
+          <label>Senha<input name="senha" type="password" autocomplete="current-password" required minlength="12" maxlength="200"></label>
+          <button type="submit">Entrar</button>
+        </form>
+        <form id="register-form" class="form-stack">
+          <h3>Criar conta</h3>
+          <label>E-mail<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label>Senha <span class="muted">(mínimo 12 caracteres)</span><input name="senha" type="password" autocomplete="new-password" required minlength="12" maxlength="200"></label>
+          <button class="button-secondary" type="submit">Criar conta</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="publisher-panel" class="panel hidden">
+      <div class="section-heading"><div><p class="eyebrow">PUBLICADORES</p><h2>Enviar plugin para revisão</h2></div></div>
+      <p class="muted panel-copy">O código enviado é guardado para integridade e revisão. Ele não é executado pelo servidor. Um handler precisa estar registrado no código confiável do host.</p>
+      <form id="publish-form" class="form-stack">
+        <label>Manifesto JSON<textarea name="manifest" rows="7" spellcheck="false" required>{
+  "nome": "meu-plugin",
+  "versao": "1.0.0",
+  "descricao": "Descreva o que o plugin faz",
+  "ganchos": ["card-criado"],
+  "permissao": "leitura"
+}</textarea></label>
+        <label>Código-fonte do handler<textarea name="codigo" rows="5" spellcheck="false" placeholder="Cole o código do handler registrado no host"></textarea></label>
+        <button type="submit">Enviar para revisão</button>
+      </form>
+    </section>
+
+    <section id="admin-panel" class="admin-grid hidden">
+      <div class="panel">
+        <div class="section-heading"><div><p class="eyebrow">MODERAÇÃO</p><h2>Plugins aguardando revisão</h2></div></div>
+        <div id="pending-list" class="stack-list"></div>
+      </div>
+      <div class="panel">
+        <div class="section-heading"><div><p class="eyebrow">ACESSOS</p><h2>Contas</h2></div></div>
+        <div id="user-list" class="stack-list"></div>
+      </div>
+    </section>
+
+    <section class="catalog-section">
+      <div class="section-heading catalog-heading">
+        <div><p class="eyebrow">VITRINE</p><h2>Plugins aprovados</h2></div>
+        <button id="refresh-button" class="button-secondary" type="button">Atualizar lista</button>
+      </div>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+      <div id="plugin-list" class="plugin-grid"></div>
+    </section>
+  </main>
+  <footer><span>Plugin Market</span><span>Extensões com revisão e execução controlada pelo host.</span></footer>
 </body>
 </html>

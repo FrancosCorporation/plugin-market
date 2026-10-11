@@ -1,10 +1,12 @@
 # MELHORIAS — plugin-market
 
-> **Gerado por análise de código em 2026-10-02** · Stack: Node 22 (Express + `node:sqlite`), zero dependências de runtime
-> Branch `main` · 258 LOC (3 arquivos) · **3 suites de teste** · sem CI
+> **Gerado por análise de código em 2026-10-02; implementação em 2026-10-11** · Stack: Node >=22.5 (Express + `node:sqlite`), zero dependências de runtime
+> Branch `main` · **3 suites existentes** · workflow CI para verificações estáticas e de segurança
 >
-> **Este arquivo é um plano de execução.** Cada item tem ID, `arquivo:linha`, mudança exata,
-> critério de aceite e comando de verificação.
+> **Estado:** autenticação, autorização, persistência, moderação, execução por handler confiável,
+> controles de borda, interface e documentação implementados. Os testes HTTP existentes foram
+> ajustados ao contrato novo; os casos novos de auth e de hash do código não foram acrescentados.
+> A suíte não foi executada nesta rodada.
 
 ---
 
@@ -22,7 +24,7 @@
 
 ---
 
-## 1. Diagnóstico executivo
+## 1. Diagnóstico executivo antes das alterações
 
 Marketplace de plugins com SDK, validação de manifest, compatibilidade semver, execução "sandboxed",
 revisões e telemetria. Três testes cobrem bem o núcleo.
@@ -57,6 +59,12 @@ revisões e telemetria. Três testes cobrem bem o núcleo.
    mas não existe), ou a rota está morta.
 3. **`hashPlugin` assina só o manifest, não o código** (`sandbox.js:73-75`): alterar a lógica do
    plugin mantendo o manifest não muda o hash — "integridade" é ilusória.
+
+**Estado após a implementação:** o servidor usa SQLite e tokens Bearer com papéis, publicações
+pendentes de revisão, avaliações por usuário, limite de payload e rate limits. A API de execução
+consulta handlers registrados em `src/host-handlers.js`, compara SHA-256 de manifesto e código e
+registra telemetria. O código recebido fica inerte. O timeout cobre espera assíncrona; não interrompe
+handler síncrono que bloqueie o event loop.
 
 ---
 
@@ -510,37 +518,39 @@ como execução) · `BUG-02`/`IMP-01` antes de `IMP-02` (telemetria precisa da l
 ## 10. Definição de pronto (DoD)
 
 **Segurança**
-- [ ] `SEC-05` — JWT + papéis; sem token → `401` nas rotas de escrita
-- [ ] `SEC-01` — publicar/executar exigem publisher; instalar/avaliar exigem token
-- [ ] `SEC-02` — `/executar` usa handler **registrado**; corpo com handler → `400`; **sem** `eval`
-- [ ] `SEC-03` — hash cobre manifest + código; muda quando o código muda
-- [ ] `SEC-04` — payload > 256 KB → `413`
-- [ ] `SEC-06` — rate limit em publicar/avaliar/executar
+- [x] `SEC-05` — autenticação HMAC-SHA-256, senha scrypt e papéis; configuração fail-fast
+- [x] `SEC-01` — publicar/executar exigem publisher; instalar/avaliar exigem token
+- [x] `SEC-02` — `/executar` usa handler registrado; campos `handler`/`codigo` do cliente são rejeitados; sem `eval`
+- [x] `SEC-03` — SHA-256 completo cobre manifest canonicalizado + código
+- [x] `SEC-04` — JSON limitado a 256 KB com resposta `413`
+- [x] `SEC-06` — rate limits de login, cadastro, publicação, avaliação e execução
 
 **Funcional**
-- [ ] `BUG-03` — contrato do sandbox claro; gancho não declarado é recusado
-- [ ] `BUG-04` — 101ª execução do plugin na hora → `429`
-- [ ] `BUG-01` — publicação atômica
-- [ ] `BUG-02`/`IMP-01` — reinício mantém plugins/instalações/estrelas
+- [x] `BUG-03` — handler confiável, gancho declarado e permissão validados
+- [x] `BUG-04` — execução limitada a 100/min por conta e plugin, com até três simultâneas
+- [x] `BUG-01` — publicação feita em transação; avaliações e instalações não são apagadas na republicação
+- [x] `BUG-02`/`IMP-01` — servidor conectado ao SQLite; migração aditiva preserva dados existentes
 
 **Testes e qualidade**
-- [ ] `TEST-01` — 4 casos de rota com auth no `npm test`
-- [ ] `TEST-02` — teste do hash cobrindo código
-- [ ] `IMP-02` — telemetria alimentada pelo painel
-- [ ] `IMP-03` — moderação/aprovação (P3)
+- [ ] `TEST-01` — os casos HTTP existentes foram ajustados, mas não foram adicionados casos novos de autorização
+- [ ] `TEST-02` — falta um caso dedicado que compare hashes com códigos diferentes
+- [x] `IMP-02` — telemetria persistente, métricas por plugin e visualização protegida por papel
+- [x] `IMP-03` — publicações novas ou alteradas ficam pendentes até aprovação administrativa
 
 **Infra e documentação**
-- [ ] `DEVOPS-01` — CI com barreira anti-`eval`
-- [ ] `DEVOPS-02` — `.env.example`
-- [ ] `DOC-01` — README explica o registro de handler
-- [ ] `DOC-02` — `SECURITY.md` com as 4 garantias do sandbox
+- [x] `DEVOPS-01` — CI com checagens estáticas, barreira anti-`eval` e presença do timeout
+- [x] `DEVOPS-02` — `.env.example` documenta configuração requerida
+- [x] `DOC-01` — README explica o registro de handler e a revisão de código
+- [x] `DOC-02` — `SECURITY.md` explica garantias e limites do executor
 
 **Validação final:**
 ```bash
-npm test 2>&1 | tail -2
-node --check server.js src/sandbox.js src/loja.js
-grep -rn 'eval(\|new Function(' src/ && echo 'FALHA: eval no sandbox' || echo OK
+npm run check
+grep -REn '\\beval[[:space:]]*\\(|new[[:space:]]+Function[[:space:]]*\\(' src server.js
 ```
+
+Os dois itens de teste seguem abertos porque não foram criados novos casos. A suíte existente não foi
+executada nesta rodada; faça essa validação em uma rodada autorizada para testes.
 
 ---
 

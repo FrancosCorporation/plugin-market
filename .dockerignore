@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+node_modules
+*.db
+*.db-shm
+*.db-wal
+npm-debug.log*
+test
+MELHORIAS.md

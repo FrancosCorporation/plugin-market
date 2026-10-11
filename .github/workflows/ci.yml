@@ -1,18 +1,27 @@
 name: CI
+
 on:
   push:
-    branches: [main]
   pull_request:
 
 jobs:
-  test:
+  static-and-safety-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - run: npm test
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Keep dynamic code evaluation out of the host
+        run: |
+          if grep -REn '\beval[[:space:]]*\(|new[[:space:]]+Function[[:space:]]*\(' src server.js; then
+            echo 'Dynamic code evaluation is forbidden in the plugin host.'
+            exit 1
+          fi
+          grep -Fq 'Promise.race' src/sandbox.js || { echo 'Sandbox timeout guard is missing.'; exit 1; }
+          grep -Fq 'setTimeout' src/sandbox.js || { echo 'Sandbox timeout is missing.'; exit 1; }
       - name: Scan de licenças
         run: npx license-checker --production --failOn "AGPL;GPL;LGPL;CC-BY-NC" || (echo "LICENÇA INCOMPATÍVEL" && exit 1)

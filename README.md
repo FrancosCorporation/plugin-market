@@ -18,11 +18,11 @@ Para executar sem Docker:
 npm ci
 export JWT_SECRET="use-aqui-um-segredo-aleatorio-com-pelo-menos-32-bytes"
 export PLUGIN_ADMIN_EMAIL="admin@example.com"
-export PLUGIN_ADMIN_PASSWORD="uma-senha-forte-com-12-ou-mais-caracteres"
+export PLUGIN_ADMIN_PASSWORD="uma-senha-forte-com-12-a-200-caracteres"
 npm start
 ```
 
-`DATABASE_PATH` define o arquivo SQLite e `PORT` define a porta HTTP. O servidor encerra a inicialização se a chave ou a conta administrativa não estiverem configuradas corretamente. A senha administrativa é provisionada a partir do ambiente em cada inicialização.
+`DATABASE_PATH` define o arquivo SQLite e `PORT` define a porta HTTP. O servidor encerra a inicialização se a chave ou a conta administrativa não estiverem configuradas corretamente. A senha administrativa deve ter de 12 a 200 caracteres e é provisionada a partir do ambiente em cada inicialização.
 
 ## Contas e papéis
 

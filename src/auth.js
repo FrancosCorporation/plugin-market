@@ -16,7 +16,9 @@ function base64url(valor) {
 export function validarConfiguracaoAuth({ jwtSecret, adminEmail, adminPassword }) {
   if (!jwtSecret || Buffer.byteLength(jwtSecret) < 32) throw new Error('JWT_SECRET deve ter pelo menos 32 bytes');
   if (typeof adminEmail !== 'string' || adminEmail.length > 254 || !EMAIL_RE.test(adminEmail)) throw new Error('PLUGIN_ADMIN_EMAIL deve ser um e-mail válido');
-  if (typeof adminPassword !== 'string' || adminPassword.length < 12) throw new Error('PLUGIN_ADMIN_PASSWORD deve ter pelo menos 12 caracteres');
+  if (typeof adminPassword !== 'string' || adminPassword.length < 12 || adminPassword.length > 200) {
+    throw new Error('PLUGIN_ADMIN_PASSWORD deve ter entre 12 e 200 caracteres');
+  }
 }
 
 async function gerarHashSenha(senha) {
@@ -97,8 +99,9 @@ export function criarAuth(loja, { jwtSecret, adminEmail, adminPassword }) {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     const senha = typeof req.body?.senha === 'string' ? req.body.senha : '';
     const usuario = email.length <= 254 ? loja.buscarUsuarioPorEmail(email) : null;
-    const valido = await verificarSenha(senha.slice(0, 200), usuario?.senha_hash);
-    if (!usuario || !valido) return erro(res, 401, 'credenciais-invalidas', 'e-mail ou senha inválidos');
+    const dentroDoLimite = senha.length <= 200;
+    const valido = await verificarSenha(dentroDoLimite ? senha : '', usuario?.senha_hash);
+    if (!usuario || !dentroDoLimite || !valido) return erro(res, 401, 'credenciais-invalidas', 'e-mail ou senha inválidos');
     return res.json({ usuario: { id: usuario.id, email: usuario.email, papel: usuario.papel }, token: emitirToken(usuario) });
   }
 

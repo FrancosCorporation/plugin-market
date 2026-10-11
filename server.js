@@ -41,6 +41,10 @@ function responderErro(res, status, codigo, mensagem) {
   return res.status(status).json({ erro: { codigo, mensagem } });
 }
 
+function asyncRoute(handler) {
+  return (req, res, next) => Promise.resolve().then(() => handler(req, res, next)).catch(next);
+}
+
 // Rate limiter simples por processo, com janela fixa, limpeza e limite de memória.
 function criarRateLimitador({ max, janelaMs, chave }) {
   const buckets = new Map();
@@ -73,8 +77,8 @@ const limiteEstrela = criarRateLimitador({ max: 30, janelaMs: 60 * 60_000, chave
 const limiteExecucao = criarRateLimitador({ max: 100, janelaMs: 60_000, chave: (req) => `${req.usuario.id}:${req.params.nome}` });
 const execucoesAtivas = new Map();
 
-app.post('/api/auth/register', limiteAuth, auth.registrar);
-app.post('/api/auth/login', limiteAuth, auth.login);
+app.post('/api/auth/register', limiteAuth, asyncRoute(auth.registrar));
+app.post('/api/auth/login', limiteAuth, asyncRoute(auth.login));
 app.get('/api/auth/me', auth.exigirToken, (req, res) => {
   const { id, email, papel } = req.usuario;
   res.json({ usuario: { id, email, papel } });
@@ -122,7 +126,7 @@ app.post('/api/plugins/:nome/estrela', auth.exigirToken, limiteEstrela, (req, re
   return res.json(resultado);
 });
 
-app.post('/api/plugins/:nome/executar', auth.exigirToken, auth.exigirPapel('publisher', 'admin'), limiteExecucao, async (req, res) => {
+app.post('/api/plugins/:nome/executar', auth.exigirToken, auth.exigirPapel('publisher', 'admin'), limiteExecucao, asyncRoute(async (req, res) => {
   if (Object.hasOwn(req.body || {}, 'handler') || Object.hasOwn(req.body || {}, 'codigo')) {
     return responderErro(res, 400, 'handler-remoto', 'handlers e código enviados pela requisição não são aceitos');
   }
@@ -172,7 +176,7 @@ app.post('/api/plugins/:nome/executar', auth.exigirToken, auth.exigirPapel('publ
     console.error('Falha ao gravar telemetria:', falha?.message || falha);
   }
   return res.status(resultado.ok ? 200 : 422).json(resultado);
-});
+}));
 
 app.get('/api/plugins/:nome/metricas', auth.exigirToken, auth.exigirPapel('publisher', 'admin'), (req, res) => {
   const plugin = loja.buscarPlugin(req.params.nome);
@@ -198,7 +202,7 @@ app.post('/api/admin/plugins/:nome/revisao', auth.exigirToken, auth.exigirPapel(
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
 app.use('/api', (req, res) => responderErro(res, 404, 'rota-inexistente', 'rota da API não encontrada'));
-app.use(async (req, res) => {
+app.use(asyncRoute(async (req, res) => {
   const raizPublica = resolve(ROOT, 'public');
   let caminho;
   try {
@@ -219,7 +223,7 @@ app.use(async (req, res) => {
     const indice = await readFile(resolve(raizPublica, 'index.html'));
     return res.type(MIME['.html']).send(indice);
   }
-});
+}));
 
 app.use((erro, req, res, next) => {
   if (res.headersSent) return next(erro);

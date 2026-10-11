@@ -556,3 +556,9 @@ executada nesta rodada; faça essa validação em uma rodada autorizada para tes
 
 *Fim do plano. Gerado por leitura direta do código em 2026-10-02. Nenhum item já estava corrigido*
 *— todos apontam para defeitos ainda presentes.*
+
+## Revisão estática adicional — 2026-10-11
+
+- O login rejeita senhas acima de 200 caracteres integralmente, sem comparar apenas o prefixo. A senha administrativa tem o mesmo limite e falha no boot se estiver fora de 12–200 caracteres.
+- Promessas de autenticação, execução e leitura de arquivos estáticos usam um wrapper Express 4 que encaminha rejeições ao middleware de erro.
+- Não executei testes; TEST-01/02 continuam pendentes.

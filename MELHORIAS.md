@@ -562,3 +562,4 @@ executada nesta rodada; faça essa validação em uma rodada autorizada para tes
 - O login rejeita senhas acima de 200 caracteres integralmente, sem comparar apenas o prefixo. A senha administrativa tem o mesmo limite e falha no boot se estiver fora de 12–200 caracteres.
 - Promessas de autenticação, execução e leitura de arquivos estáticos usam um wrapper Express 4 que encaminha rejeições ao middleware de erro.
 - Não executei testes; TEST-01/02 continuam pendentes.
+- Reauditoria operacional: a última CI do plugin passou (`38161442556`), mas emitiu aviso de que `actions/checkout@v4` e `actions/setup-node@v4` dependem de Node 20 e foram forçadas a Node 24. A workflow agora fixa `ubuntu-24.04` e usa as versões v7 dos Actions, compatíveis com Node 24. Nenhum teste é chamado por essa workflow.
